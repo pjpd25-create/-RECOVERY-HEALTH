@@ -1,0 +1,6 @@
+{
+  "name": "RECOVERY HEALTH",
+  "description": "RECOVERY HEALTH - Plataforma Inteligente de Formação, Simulação e Desenvolvimento em Saúde.",
+  "requestFramePermissions": ["microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

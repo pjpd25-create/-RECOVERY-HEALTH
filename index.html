@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt" translate="no" class="notranslate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <title>RECOVERY HEALTH v1.0</title>
+    <meta name="description" content="RECOVERY HEALTH - Plataforma de elite para o raciocínio clínico e simulação nas Ciências da Saúde." />
+    <meta name="theme-color" content="#0d9488" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RECOVERY HEALTH" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1n_zM13DJYSp6WpluuacxP-DPUjeeYY4C" />
+    <link rel="icon" href="https://lh3.googleusercontent.com/d/1n_zM13DJYSp6WpluuacxP-DPUjeeYY4C" />
+    <script>
+      (function() {
+        try {
+          var overrideObj = localStorage.getItem('recovery_health_theme_manual_override') || localStorage.getItem('fisiofasp_theme_manual_override');
+          if (overrideObj) {
+            var data = JSON.parse(overrideObj);
+            if (Date.now() - data.timestamp < 4 * 60 * 60 * 1000) {
+              if (data.mode === 'dark') document.documentElement.classList.add('dark');
+              else document.documentElement.classList.remove('dark');
+              return;
+            }
+          }
+          var hour = new Date().getHours();
+          if (hour >= 18 || hour < 6) {
+            document.documentElement.classList.add('dark');
+          } else {
+            var saved = localStorage.getItem('recovery_health_theme') || localStorage.getItem('fisiofasp_theme');
+            if (saved === 'dark') document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          var h = new Date().getHours();
+          if (h >= 18 || h < 6) document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="overflow-x-hidden antialiased text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 selection:bg-teal-500 selection:text-white">
+    <div id="root" class="w-full min-h-screen overflow-x-hidden"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

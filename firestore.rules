@@ -1,0 +1,130 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (UID or Encoded Email)
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - avatar: string (optional)
+    //   - score: number
+    //   - level: number
+    //   - role: string (enum: ['user', 'admin'])
+    //
+    // [Other collections: feed, groups, leaderboard, payments, logs, duels]
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (
+          (request.auth.token.get('email', '') == "pjoaquim1705@gmail.com" && request.auth.token.get('email_verified', false) == true) ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
+        );
+    }
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('email' in data) || (data.email is string && data.email.size() < 100)) &&
+             (!('avatar' in data) || (data.avatar == null || (data.avatar is string && data.avatar.size() < 2000))) &&
+             (!('uid' in data) || (data.uid is string && data.uid.size() < 128)) &&
+             (!('role' in data) || data.role in ['user', 'admin']);
+    }
+
+    function roleUnchanged() {
+      return !('role' in request.resource.data) || 
+             (resource != null && 'role' in resource.data && request.resource.data.role == resource.data.role);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAuthenticated() && (isOwner(userId) || ( 'email' in request.resource.data && request.resource.data.email == request.auth.token.get('email', ''))) && isValidUser(request.resource.data) && 
+                      (!('role' in request.resource.data) || request.resource.data.role == 'user' || isAdmin())) ||
+                      (!isAuthenticated() && isValidUser(request.resource.data) && !('role' in request.resource.data));
+      allow update: if (isAuthenticated() && (isOwner(userId) || (resource != null && 'email' in resource.data && resource.data.email == request.auth.token.get('email', ''))) && isValidUser(request.resource.data) && roleUnchanged()) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /feed/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.userUid == request.auth.uid || 
+        isAdmin() || 
+        request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'comments'])
+      );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.userUid == request.auth.uid);
+    }
+
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.adminUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.adminUid == request.auth.uid || 
+        isAdmin() || 
+        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['members', 'messages']))
+      );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.adminUid == request.auth.uid);
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if (isOwner(userId) || !isAuthenticated());
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isOwner(resource.data.uid) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /duels/{duelId} {
+      allow read, create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    function isValidCertificateSettings(data) {
+      return data.keys().hasAll(['title', 'attributionText', 'bodyText']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.attributionText is string && data.attributionText.size() > 0 && data.attributionText.size() < 500 &&
+             data.bodyText is string && data.bodyText.size() > 0 && data.bodyText.size() < 2000;
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin() && (settingId != 'certificate' || isValidCertificateSettings(request.resource.data));
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

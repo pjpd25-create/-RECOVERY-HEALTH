@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "AccessLog": {
+      "title": "AccessLog",
+      "description": "A log of user access to the platform",
+      "type": "object",
+      "properties": {
+        "userUid": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "action": { "type": "string" }
+      },
+      "required": ["userUid", "userName", "timestamp"]
+    },
+    "DuelRecord": {
+      "title": "DuelRecord",
+      "description": "A record of a completed duel",
+      "type": "object",
+      "properties": {
+        "player1Uid": { "type": "string" },
+        "player1Name": { "type": "string" },
+        "player1Score": { "type": "number" },
+        "player2Uid": { "type": "string" },
+        "player2Name": { "type": "string" },
+        "player2Score": { "type": "number" },
+        "winnerUid": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["player1Uid", "player2Uid", "timestamp"]
+    },
+    "FeedItem": {
+      "title": "FeedItem",
+      "description": "A post in the social feed",
+      "type": "object",
+      "properties": {
+        "userUid": { "type": "string" },
+        "userName": { "type": "string" },
+        "type": { "type": "string", "enum": ["achievement", "post"] },
+        "content": { "type": "string" },
+        "likes": { "type": "array", "items": { "type": "string" } },
+        "comments": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userUid", "userName", "type", "content", "createdAt"]
+    },
+    "StudyGroup": {
+      "title": "StudyGroup",
+      "description": "A study group for users",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "adminUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "messages": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["name", "adminUid", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "score": { "type": "number" },
+        "level": { "type": "number" },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "streak": { "type": "number" },
+        "lastStudyDate": { "type": "string" },
+        "lives": { "type": "number" },
+        "isPremium": { "type": "boolean" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["uid", "name", "email"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "An entry in the global ranking",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "score": { "type": "number" },
+        "level": { "type": "number" },
+        "completedCases": { "type": "number" },
+        "lastUpdate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "score"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "A payment record for premium access",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "receiptUrl": { "type": "string" }
+      },
+      "required": ["uid", "userEmail", "amount", "status", "createdAt"]
+    },
+    "CertificateSettings": {
+      "title": "CertificateSettings",
+      "description": "Global settings for certificate generation",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "attributionText": { "type": "string" },
+        "bodyText": { "type": "string" }
+      },
+      "required": ["title", "attributionText", "bodyText"]
+    }
+  },
+  "firestore": {
+    "/feed": { "schema": "FeedItem", "description": "Global social feed" },
+    "/groups": { "schema": "StudyGroup", "description": "Study groups" },
+    "/users": { "schema": "UserProfile", "description": "User profiles" },
+    "/leaderboard": { "schema": "LeaderboardEntry", "description": "Global ranking entries" },
+    "/payments": { "schema": "Payment", "description": "Payment records" },
+    "/logs": { "schema": "AccessLog", "description": "System access logs" },
+    "/duels": { "schema": "DuelRecord", "description": "Completed duel records" },
+    "/settings": { "schema": "CertificateSettings", "description": "Global application settings" }
+  }
+}
